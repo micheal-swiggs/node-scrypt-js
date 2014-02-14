@@ -13,6 +13,7 @@ apply plugin: 'js'
 
 buildDir = "build"
 jsSrcDir = "lib"
+testDir = "tests"
 
 javascript.source {
     dev {
@@ -42,4 +43,40 @@ minifyJs {
     closure {
         warningLevel = 'QUIET'
     }
+}
+
+task test() << {
+    def specs = []
+    new File(testDir).eachFile{
+        if (!it.name.endsWith('.html')) return
+        specs << it
+    }
+    def phantomJsPath = "which phantomjs".execute().text.trim()
+    def startTime = new Date().time
+    def numFailures = 0
+    def testsFailed = false
+
+    specs.each{ spec ->
+        def outputFile = "${buildDir}/TEST-${spec.name.replace('.html', '.xml')}"
+        ant.exec(outputproperty: 'cmdOut', errorproperty: 'cmdErr',
+            resultproperty: 'exitCode', failonerror: 'false',
+            executable: phantomJsPath){
+
+            arg(value: 'tests/resources/run-qunit.js')
+            arg(value: spec.canonicalPath)
+        }
+
+        if (ant.project.properties.exitCode != '0'){
+            testsFailed = true
+            numFailures++
+            println "FAILED"
+        } else {
+            println "PASSED"
+        }
+
+        new File(outputFile).write(ant.project.properties.cmdOut)
+    }
+
+    println "QUnit Tests ${testsFailed ? 'FAILED' : 'PASSED'} - view reports in ${buildDir}"
+    ant.fail(if: testsFailed, message: 'JS Tests Failed')
 }

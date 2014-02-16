@@ -1,2 +1,4 @@
 .gradle/
 deploy/
+build/TEST-*
+tests/dev.html

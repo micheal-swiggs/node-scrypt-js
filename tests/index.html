@@ -8,6 +8,14 @@
 <body>
 <div id="qunit"></div>
 <div id="qunit-fixture"></div>
+<script src="http://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/sha256.js"></script>
+<script src="http://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/hmac-sha256.js"></script>
+<script src="http://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/pbkdf2.js"></script>
+<%
+    jsSources.each{
+        println "<script src='${it}'></script>"
+    }
+%>
 <script src="resources/qunit.js"></script>
 <script src="tests.js"></script>
 </body>

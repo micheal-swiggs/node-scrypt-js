@@ -8,4 +8,8 @@ It is based heavily on the Java version
 https://github.com/wg/scrypt
 
 
+#### Developer Notes
 
+#### Testing
+
+Developer mode tests can be quickly run with the command `./tests/dev-tests` from the project root directory.

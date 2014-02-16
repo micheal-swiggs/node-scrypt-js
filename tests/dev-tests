@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cd tests
+phantomjs resources/run-qunit.js dev.html

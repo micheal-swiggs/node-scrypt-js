@@ -1,3 +1,4 @@
+import groovy.text.SimpleTemplateEngine
 
 buildscript{
     repositories {
@@ -45,12 +46,8 @@ minifyJs {
     }
 }
 
-task test() << {
-    def specs = []
-    new File(testDir).eachFile{
-        if (!it.name.endsWith('.html')) return
-        specs << it
-    }
+def phantomTest (specs){
+
     def phantomJsPath = "which phantomjs".execute().text.trim()
     def startTime = new Date().time
     def numFailures = 0
@@ -65,18 +62,45 @@ task test() << {
             arg(value: 'tests/resources/run-qunit.js')
             arg(value: spec.canonicalPath)
         }
+        
+        def commandOut = "${ant.project.properties.cmdOut}"
 
         if (ant.project.properties.exitCode != '0'){
             testsFailed = true
             numFailures++
-            println "FAILED"
+            println "FAILED\n"
+            println commandOut
         } else {
             println "PASSED"
         }
 
-        new File(outputFile).write(ant.project.properties.cmdOut)
+        new File(outputFile).write(commandOut)
     }
 
     println "QUnit Tests ${testsFailed ? 'FAILED' : 'PASSED'} - view reports in ${buildDir}"
     ant.fail(if: testsFailed, message: 'JS Tests Failed')
+}
+
+task prodTest() << {
+    def specs = []
+    new File(testDir).eachFile{
+        if (!it.name.endsWith('.html')) return
+        specs << it
+    }
+    phantomTest (specs)
+}
+
+task devTest() << {
+    def cDir = new File(".")
+    def jsSources = javascript.source.dev.js.files.collect{
+        "../"+cDir.toURI().relativize(it.toURI()).toString()
+    }
+    def engine = new SimpleTemplateEngine()
+    template = engine.createTemplate(new File("tests/index.html").text)
+        .make([jsSources: jsSources])
+    new File("${testDir}/dev.html").with{
+        if(exists()) delete();
+    }
+    new File("${testDir}/dev.html") << template.toString()
+    phantomTest ([new File("${testDir}/dev.html")])
 }
